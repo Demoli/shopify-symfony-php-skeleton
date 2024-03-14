@@ -1,0 +1,40 @@
+version: "3.7"
+services:
+  nginx:
+    container_name: shopify_nginx
+    build: ./docker/nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    links:
+      - phpfpm
+    volumes:
+      - ./:/var/www/html
+    hostname: docker.shopify.app
+    depends_on:
+      - phpfpm
+
+  phpfpm:
+    container_name: shopify_phpfpm
+    build: ./docker/php-fpm
+    links:
+      - mysql
+    volumes:
+      - ./:/var/www/html
+    environment:
+      - PHP_IDE_CONFIG=serverName=docker
+    ports:
+      - "8080:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  mysql:
+    container_name: shopify_mysql
+    image: percona:8.0 # versions available at https://hub.docker.com/_/percona/
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./docker/data/mysql:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=docker
